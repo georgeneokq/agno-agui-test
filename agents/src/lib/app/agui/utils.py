@@ -215,8 +215,6 @@ def _create_completion_events(
     event_buffer: EventBuffer,
     message_started: bool,
     message_id: str,
-    thread_id: str,
-    run_id: str,
 ) -> List[BaseEvent]:
     """Create events for run completion."""
     events_to_emit = []
@@ -331,8 +329,11 @@ def stream_agno_response_as_agui_events(
             or chunk.event == RunEvent.run_paused
         ):
             completion_events = _create_completion_events(
-                chunk, event_buffer, message_started, message_id, thread_id, run_id
+                chunk, event_buffer, message_started, message_id
             )
+
+            # Reset to false to ensure next team member emits a new TextMessageStartEvent
+            message_started = False
 
             for event in completion_events:
                 events_to_emit = _emit_event_logic(event_buffer=event_buffer, event=event)
@@ -370,7 +371,7 @@ async def async_stream_agno_response_as_agui_events(
             or chunk.event == RunEvent.run_paused
         ):
             completion_events = _create_completion_events(
-                chunk, event_buffer, message_started, message_id, thread_id, run_id
+                chunk, event_buffer, message_started, message_id
             )
 
             # Reset to false to ensure next team member emits a new TextMessageStartEvent
