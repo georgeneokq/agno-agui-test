@@ -56,8 +56,6 @@ TypeError: sequence item 0: expected str instance, Message found
 
 ### Each agent emits AG-UI RunFinishedEvent
 
-**Note that the current fix will output all agents' output as is, instead of outputting only the team coordinator's output. This may not always be desired, especially in collaborate mode, and should preferably be made configurable through a configuration/parameter.**
-
 Reception of message stream in CopilotKit ends prematurely when interacting with a Team. This is due to how AGUIApp emits AG-UI completion events even though there are still agents in the team left to process the messages.
 
 First part of the fix can be found in `app/agui/utils.py`, `async_stream_agno_response_as_agui_events` function.

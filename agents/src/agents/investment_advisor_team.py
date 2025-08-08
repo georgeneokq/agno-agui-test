@@ -6,6 +6,8 @@ from agents.stock_price_agent import stock_price_agent
 from agents.company_news_agent import company_news_agent
 from agents.stock_summary_agent import stock_summary_agent
 
+# For testing collaborate mode, remove the stock summary agent and the instruction referencing it.
+# For testing coordinate mode, include the stock summary agent and the instruction referencing it.
 investment_advisor_team = Team(
     team_id="investment_advisor_team",
     name="Investment Advisor Team",
@@ -16,14 +18,15 @@ investment_advisor_team = Team(
     members=[
         stock_price_agent,
         company_news_agent,
-        stock_summary_agent
+        # stock_summary_agent
     ],
     instructions=[
         "You should expect a company or a stock symbol as an input."
         "First get the stock price from Stock Price Agent and news from Company News Agent."
-        "Finally, ask the Stock Summary Agent to summarize the price and news."
+        "Finally, summarize the price and news."
+        # "Finally, ask the Stock Summary Agent to summarize the price and news."
     ],
-    mode="coordinate",
+    mode="collaborate",
     stream=True,
     stream_intermediate_steps=True,
     add_datetime_to_instructions=True,
