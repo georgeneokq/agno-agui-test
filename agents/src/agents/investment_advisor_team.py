@@ -31,5 +31,5 @@ investment_advisor_team = Team(
     enable_team_history=True,
     share_member_interactions=True,
     storage=SqliteStorage(table_name="agent_sessions", db_file="/tmp/data.db"),
-    markdown=False
+    markdown=True
 )

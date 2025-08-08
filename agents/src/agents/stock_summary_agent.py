@@ -10,4 +10,5 @@ stock_summary_agent = Agent(
         api_key=os.getenv("GEMINI_API_KEY")
     ),
     instructions="You are an Stock Summary agent. Based on previous agents' outputs, summarize the key points.",
+    markdown=True
 )

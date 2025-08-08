@@ -12,4 +12,5 @@ stock_price_agent = Agent(
     ),
     tools=[YFinanceTools()],
     instructions="You are a stock price agent. Return data of specifed stock.",
+    markdown=True
 )

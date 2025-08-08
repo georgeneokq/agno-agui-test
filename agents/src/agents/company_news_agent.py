@@ -63,4 +63,5 @@ company_news_agent = Agent(
     ),
     tools=[get_company_news],
     instructions="You are a stock news agent. Return news related to specified stock's company.",
+    markdown=True
 )

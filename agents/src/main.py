@@ -19,7 +19,7 @@ async def main():
         # agent=stock_price_agent,
         name="multiagent_agui",
         app_id="multiagent_agui",
-        description="Multiagent AGUI"
+        description="Multiagent AGUI",
     )
 
     app = agui_app.get_app()
