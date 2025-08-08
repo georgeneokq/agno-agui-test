@@ -1,0 +1,26 @@
+services:
+  agents:
+    image: agents
+    pull_policy: never
+    container_name: agents
+    build:
+      context: .
+      dockerfile: agents/dev.Dockerfile
+    volumes:
+      # Hot reload
+      - "./agents/src:/app/agents/src"
+    env_file:
+      - ./agents/.env
+
+  ui:
+    image: ui
+    pull_policy: never
+    container_name: ui
+    build:
+      context: .
+      dockerfile: ui/dev.Dockerfile
+    volumes:
+      # Hot reload
+      - "./ui/src:/app/ui/src"
+    ports:
+      - "3000:3000"
