@@ -42,7 +42,7 @@ async def run_agent(agent: Agent, run_input: RunAgentInput) -> AsyncIterator[Bas
 
         # Stream the response content in AG-UI format
         async for event in async_stream_agno_response_as_agui_events(
-            response_stream=response_stream, thread_id=run_input.thread_id, run_id=run_id, for_team=False
+            response_stream=response_stream
         ):
             yield event
 
@@ -74,7 +74,7 @@ async def run_team(team: Team, input: RunAgentInput) -> AsyncIterator[BaseEvent]
 
         # Stream the response content in AG-UI format
         async for event in async_stream_agno_response_as_agui_events(
-            response_stream=response_stream, thread_id=input.thread_id, run_id=run_id, for_team=True
+            response_stream=response_stream
         ):
             yield event
 
