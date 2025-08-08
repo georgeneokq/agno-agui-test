@@ -10,7 +10,6 @@ from typing import AsyncIterator, Deque, List, Optional, Set, Tuple, Union
 from ag_ui.core import (
     BaseEvent,
     EventType,
-    RunFinishedEvent,
     StepFinishedEvent,
     StepStartedEvent,
     TextMessageContentEvent,
@@ -159,8 +158,6 @@ def _create_events_from_chunk(
                 delta=content,
             )
             events_to_emit.append(content_event)
-
-    # TODO: Tool calls causing CopilotKit output to disappear.
 
     # Handle starting a new tool call
     elif chunk.event == RunEvent.tool_call_started:

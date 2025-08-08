@@ -74,12 +74,9 @@ async def run_team(team: Team, input: RunAgentInput) -> AsyncIterator[BaseEvent]
         async for event in async_stream_agno_response_as_agui_events(
             response_stream=response_stream, thread_id=input.thread_id, run_id=run_id, for_team=True
         ):
-            print(event)
             yield event
 
-        event = RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=input.thread_id, run_id=run_id)
-        yield event
-        print(event)
+        yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=input.thread_id, run_id=run_id)
 
     except Exception as e:
         logger.error(f"Error running team: {e}", exc_info=True)
