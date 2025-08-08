@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from agents.investment_advisor_team import investment_advisor_team
+from agents.stock_price_agent import stock_price_agent
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

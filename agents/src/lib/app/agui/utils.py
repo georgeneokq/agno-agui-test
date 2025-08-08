@@ -163,44 +163,44 @@ def _create_events_from_chunk(
     # TODO: Tool calls causing CopilotKit output to disappear.
 
     # Handle starting a new tool call
-    # elif chunk.event == RunEvent.tool_call_started:
-    #     if chunk.tool is not None:  # type: ignore
-    #         tool_call = chunk.tool  # type: ignore
-    #         start_event = ToolCallStartEvent(
-    #             type=EventType.TOOL_CALL_START,
-    #             tool_call_id=tool_call.tool_call_id,  # type: ignore
-    #             tool_call_name=tool_call.tool_name,  # type: ignore
-    #             parent_message_id=message_id,
-    #         )
-    #         events_to_emit.append(start_event)
+    elif chunk.event == RunEvent.tool_call_started:
+        if chunk.tool is not None:  # type: ignore
+            tool_call = chunk.tool  # type: ignore
+            start_event = ToolCallStartEvent(
+                type=EventType.TOOL_CALL_START,
+                tool_call_id=tool_call.tool_call_id,  # type: ignore
+                tool_call_name=tool_call.tool_name,  # type: ignore
+                parent_message_id=message_id,
+            )
+            events_to_emit.append(start_event)
 
-    #         args_event = ToolCallArgsEvent(
-    #             type=EventType.TOOL_CALL_ARGS,
-    #             tool_call_id=tool_call.tool_call_id,  # type: ignore
-    #             delta=json.dumps(tool_call.tool_args),
-    #         )
-    #         events_to_emit.append(args_event)
+            args_event = ToolCallArgsEvent(
+                type=EventType.TOOL_CALL_ARGS,
+                tool_call_id=tool_call.tool_call_id,  # type: ignore
+                delta=json.dumps(tool_call.tool_args),
+            )
+            events_to_emit.append(args_event)
 
-    # # Handle tool call completion
-    # elif chunk.event == RunEvent.tool_call_completed:
-    #     if chunk.tool is not None:  # type: ignore
-    #         tool_call = chunk.tool  # type: ignore
-    #         if tool_call.tool_call_id not in event_buffer.ended_tool_call_ids:
-    #             end_event = ToolCallEndEvent(
-    #                 type=EventType.TOOL_CALL_END,
-    #                 tool_call_id=tool_call.tool_call_id,  # type: ignore
-    #             )
-    #             events_to_emit.append(end_event)
+    # Handle tool call completion
+    elif chunk.event == RunEvent.tool_call_completed:
+        if chunk.tool is not None:  # type: ignore
+            tool_call = chunk.tool  # type: ignore
+            if tool_call.tool_call_id not in event_buffer.ended_tool_call_ids:
+                end_event = ToolCallEndEvent(
+                    type=EventType.TOOL_CALL_END,
+                    tool_call_id=tool_call.tool_call_id,  # type: ignore
+                )
+                events_to_emit.append(end_event)
 
-    #             if tool_call.result is not None:
-    #                 result_event = ToolCallResultEvent(
-    #                     type=EventType.TOOL_CALL_RESULT,
-    #                     tool_call_id=tool_call.tool_call_id,  # type: ignore
-    #                     content=str(tool_call.result),
-    #                     role="tool",
-    #                     message_id=str(uuid.uuid4()),
-    #                 )
-    #                 events_to_emit.append(result_event)
+                if tool_call.result is not None:
+                    result_event = ToolCallResultEvent(
+                        type=EventType.TOOL_CALL_RESULT,
+                        tool_call_id=tool_call.tool_call_id,  # type: ignore
+                        content=str(tool_call.result),
+                        role="tool",
+                        message_id=str(uuid.uuid4()),
+                    )
+                    events_to_emit.append(result_event)
 
     # Handle reasoning
     elif chunk.event == RunEvent.reasoning_started:
@@ -264,9 +264,6 @@ def _create_completion_events(
                 tool_call_id=tool.tool_call_id,
             )
             events_to_emit.append(end_event)
-
-    run_finished_event = RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=thread_id, run_id=run_id)
-    events_to_emit.append(run_finished_event)
 
     return events_to_emit
 
@@ -339,6 +336,7 @@ def stream_agno_response_as_agui_events(
             completion_events = _create_completion_events(
                 chunk, event_buffer, message_started, message_id, thread_id, run_id
             )
+
             for event in completion_events:
                 events_to_emit = _emit_event_logic(event_buffer=event_buffer, event=event)
                 for emit_event in events_to_emit:
@@ -368,17 +366,19 @@ async def async_stream_agno_response_as_agui_events(
     event_buffer = EventBuffer()
 
     async for chunk in response_stream:
-        # Lifecycle end events to be emitted differs for Agent and Team
-        is_completion_event = chunk.event == TeamRunEvent.run_completed if for_team else (
-            chunk.event == RunEvent.run_completed
-            or chunk.event == RunEvent.run_paused
-        )
-
         # Handle the lifecycle end event
-        if is_completion_event:
+        if (
+            chunk.event == TeamRunEvent.run_completed
+            or chunk.event == RunEvent.run_completed
+            or chunk.event == RunEvent.run_paused
+        ):
             completion_events = _create_completion_events(
                 chunk, event_buffer, message_started, message_id, thread_id, run_id
             )
+
+            # Reset to false to ensure next team member emits a new TextMessageStartEvent
+            message_started = False
+
             for event in completion_events:
                 events_to_emit = _emit_event_logic(event_buffer=event_buffer, event=event)
                 for emit_event in events_to_emit:

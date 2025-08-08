@@ -10,7 +10,7 @@ This repository documents the code I have used to test the bugs of Agno's AGUIAp
 
 
 2. Run the app
-```
+```bash
 docker compose up -d
 ```
 
