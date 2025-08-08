@@ -21,13 +21,13 @@ investment_advisor_team = Team(
         # stock_summary_agent
     ],
     instructions=[
-        # "You should expect a company or a stock symbol as an input."
-        # "First get the stock price from Stock Price Agent and news from Company News Agent."
+        "You should expect a company or a stock symbol as an input."
+        "First get the stock price from Stock Price Agent and news from Company News Agent."
+        "Finally, ask the Stock Summary Agent to summarize the price and news."
         # "Finally, summarize the price and news."
-        # "Finally, ask the Stock Summary Agent to summarize the price and news."
-        "Respond to user's query, redirect to suitable member of the team."
+        # "Respond to user's query, redirect to suitable member of the team."
     ],
-    mode="route",
+    mode="coordinate",
     stream=True,
     stream_intermediate_steps=True,
     add_datetime_to_instructions=True,
