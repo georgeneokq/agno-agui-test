@@ -8,7 +8,6 @@ This repository documents the code I have used to test the bugs of Agno's AGUIAp
 
 1. Create a `agents/.env` file from `agents/.env.example`
 
-
 2. Run the app
 ```bash
 docker compose up -d
@@ -18,7 +17,7 @@ docker compose up -d
 
 4. Enter "Tesla" into the chat. For testing, I have hardcoded for the tools to support this one value.
 
-5. I will commit the patched up version - to test that the bug actually happens, look at `main.py` and comment/uncomment lines 4/5 as required.
+5. To reproduce the bugs that I have described fixes for below, look at `agents/src/main.py` and comment/uncomment lines 4/5 as required.
 
 ## Fixes
 

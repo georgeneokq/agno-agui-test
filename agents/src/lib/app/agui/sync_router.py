@@ -17,7 +17,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from agno.agent.agent import Agent
-from lib.app.agui.utils import convert_agui_messages_to_agno_messages, stream_agno_response_as_agui_events
+from agno.app.agui.utils import convert_agui_messages_to_agno_messages, stream_agno_response_as_agui_events
 from agno.team.team import Team
 
 logger = logging.getLogger(__name__)

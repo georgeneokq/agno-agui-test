@@ -2,9 +2,9 @@
 
 from fastapi.routing import APIRouter
 
-from lib.app.agui.async_router import get_async_agui_router
-from lib.app.agui.sync_router import get_sync_agui_router
-from lib.app.base import BaseAPIApp
+from agno.app.agui.async_router import get_async_agui_router
+from agno.app.agui.sync_router import get_sync_agui_router
+from agno.app.base import BaseAPIApp
 
 
 class AGUIApp(BaseAPIApp):
