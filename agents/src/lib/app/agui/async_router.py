@@ -46,6 +46,8 @@ async def run_agent(agent: Agent, run_input: RunAgentInput) -> AsyncIterator[Bas
         ):
             yield event
 
+        yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=run_input.thread_id, run_id=run_id)
+
     # Emit a RunErrorEvent if any error occurs
     except Exception as e:
         logger.error(f"Error running agent: {e}", exc_info=True)
