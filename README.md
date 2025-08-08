@@ -54,27 +54,34 @@ Traceback (most recent call last):
 TypeError: sequence item 0: expected str instance, Message found
 ```
 
-### Each agent emits AG-UI TextMessageEnd event
+### Each agent emits AG-UI RunFinishedEvent
 
 **Note that the current fix will output all agents' output as is, instead of outputting only the team coordinator's output. This may not always be desired, especially in collaborate mode, and should preferably be made configurable through a configuration/parameter.**
 
 Reception of message stream in CopilotKit ends prematurely when interacting with a Team. This is due to how AGUIApp emits AG-UI completion events even though there are still agents in the team left to process the messages.
 
-The current fix is to separate the completion condition for agents and teams, in `lib/app/agui/utils.py` line 371 - 378.
+First part of the fix can be found in `app/agui/utils.py`, `async_stream_agno_response_as_agui_events` function.
+Reset the message_started flag to False when an agent finishes its response, which ensures that the next agent will
+emit a new TextMessageStartedEvent.
 
-Added a for_team parameter to function `async_stream_agno_response_as_agui_events` to differentiate between an agent and team run.
-
-**Relevant code:**
 ```python
-# Lifecycle end events to be emitted differs for Agent and Team
-is_completion_event = chunk.event == TeamRunEvent.run_completed if for_team else (
-    chunk.event == RunEvent.run_completed
-    or chunk.event == RunEvent.run_paused
-)
+async for chunk in response_stream:
+    # Handle the lifecycle end event
+    if (
+        chunk.event == TeamRunEvent.run_completed
+        or chunk.event == RunEvent.run_completed
+        or chunk.event == RunEvent.run_paused
+    ):
+        completion_events = _create_completion_events(
+            chunk, event_buffer, message_started, message_id
+        )
 
-# Handle the lifecycle end event
-if is_completion_event:
-  ...
+        # Reset to false to ensure next team member emits a new TextMessageStartEvent
+        message_started = False
+
+        ...
 ```
 
-More tweaking is required to improve the formatting, as the output of the subsequent agent starts on the same line as the previous agent.
+Second part of the fix is in `app/agui/utils.py`, `_create_completion_events` and `stream_agno_response_as_agui_events` (including async ver.) function,
+and also the `run_agent` and `run_team` functions of both `app/agui/sync_router.py` and `app/agui/async_router.py`.
+Instead of emitting the RunFinishedEvent from `stream_agno_response_as_agui_events` (including async ver.), we shift it into `run_agent`/`run_team` as that is where we know for sure where the run for that agent/team ends.
