@@ -10,7 +10,8 @@ from ag_ui.core import (
     RunAgentInput,
     RunErrorEvent,
     RunStartedEvent,
-    RunFinishedEvent
+    RunFinishedEvent,
+    StateSnapshotEvent
 )
 from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter
@@ -77,6 +78,8 @@ async def run_team(team: Team, input: RunAgentInput) -> AsyncIterator[BaseEvent]
             response_stream=response_stream
         ):
             yield event
+        
+        yield StateSnapshotEvent(snapshot=team.session_state)
 
         yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=input.thread_id, run_id=run_id)
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@copilotkit/react-ui/styles.css";
 import "./globals.css";
+import { CopilotKit } from "@copilotkit/react-core";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+
+    <CopilotKit
+      runtimeUrl="/api/copilotkit" 
+      agent="investment_advisor_team"
+    >
         {children}
+    </CopilotKit>
       </body>
     </html>
   );
