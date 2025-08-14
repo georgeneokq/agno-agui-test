@@ -3,6 +3,8 @@ services:
     image: agents
     pull_policy: never
     container_name: agents
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     build:
       context: .
       dockerfile: agents/dev.Dockerfile

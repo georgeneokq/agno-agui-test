@@ -24,9 +24,8 @@ from ag_ui.core.types import Message as AGUIMessage
 
 from agno.models.message import Message
 from agno.run.response import RunEvent, RunResponseContentEvent, RunResponseEvent, RunResponsePausedEvent
-from agno.run.team import RunResponseContentEvent as TeamRunResponseContentEvent
-from agno.run.team import TeamRunEvent, TeamRunResponseEvent
-
+from agno.run.team import RunResponseContentEvent as TeamRunResponseContentEvent, TeamRunEvent, TeamRunResponseEvent
+from agno.run.v2.workflow import WorkflowStartedEvent, WorkflowCompletedEvent, WorkflowRunEvent, WorkflowRunResponseEvent
 
 @dataclass
 class EventBuffer:
@@ -119,7 +118,7 @@ def extract_response_chunk_content(response: RunResponseContentEvent) -> str:
 
 
 def _create_events_from_chunk(
-    chunk: Union[RunResponseEvent, TeamRunResponseEvent],
+    chunk: Union[RunResponseEvent, TeamRunResponseEvent, WorkflowRunResponseEvent],
     message_id: str,
     message_started: bool,
     event_buffer: EventBuffer,
@@ -211,7 +210,7 @@ def _create_events_from_chunk(
 
 
 def _create_completion_events(
-    chunk: Union[RunResponseEvent, TeamRunResponseEvent],
+    chunk: Union[RunResponseEvent, TeamRunResponseEvent, WorkflowRunResponseEvent],
     event_buffer: EventBuffer,
     message_started: bool,
     message_id: str,
@@ -314,7 +313,7 @@ def _emit_event_logic(event: BaseEvent, event_buffer: EventBuffer) -> List[BaseE
 
 
 def stream_agno_response_as_agui_events(
-    response_stream: Iterator[Union[RunResponseEvent, TeamRunResponseEvent]]
+    response_stream: Iterator[Union[RunResponseEvent, TeamRunResponseEvent, WorkflowRunResponseEvent]]
 ) -> Iterator[BaseEvent]:
     """Map the Agno response stream to AG-UI format, handling event ordering constraints."""
     message_id = str(uuid.uuid4())
@@ -353,7 +352,7 @@ def stream_agno_response_as_agui_events(
 
 # Async version - thin wrapper
 async def async_stream_agno_response_as_agui_events(
-    response_stream: AsyncIterator[Union[RunResponseEvent, TeamRunResponseEvent]],
+    response_stream: AsyncIterator[Union[RunResponseEvent, TeamRunResponseEvent, WorkflowRunResponseEvent]],
 ) -> AsyncIterator[BaseEvent]:
     """Map the Agno response stream to AG-UI format, handling event ordering constraints."""
     message_id = str(uuid.uuid4())
@@ -366,6 +365,7 @@ async def async_stream_agno_response_as_agui_events(
             chunk.event == TeamRunEvent.run_completed
             or chunk.event == RunEvent.run_completed
             or chunk.event == RunEvent.run_paused
+            or chunk.event == WorkflowRunEvent.workflow_completed
         ):
             completion_events = _create_completion_events(
                 chunk, event_buffer, message_started, message_id

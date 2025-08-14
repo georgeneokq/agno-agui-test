@@ -13,6 +13,9 @@ from agno.agent.agent import Agent
 from agno.api.app import AppCreate, create_app
 from agno.app.settings import APIAppSettings
 from agno.team.team import Team
+from agno.workflow.v2 import Step, Steps, Loop, Parallel, Condition, Workflow
+from agno.workflow.v2.workflow import WorkflowSteps
+
 from agno.utils.log import log_debug, log_info
 
 
@@ -23,6 +26,7 @@ class BaseAPIApp(ABC):
         self,
         agent: Optional[Agent] = None,
         team: Optional[Team] = None,
+        workflow: Optional[Workflow] = None,
         settings: Optional[APIAppSettings] = None,
         api_app: Optional[FastAPI] = None,
         router: Optional[APIRouter] = None,
@@ -32,14 +36,16 @@ class BaseAPIApp(ABC):
         description: Optional[str] = None,
         version: Optional[str] = None,
     ):
-        if not agent and not team:
-            raise ValueError("Either agent or team must be provided.")
+        provided_count = sum(x is not None for x in (agent, team, workflow))
+        if provided_count == 0:
+            raise ValueError("Either agent, team, or workflow must be provided.")
 
-        if agent and team:
-            raise ValueError("Only one of agent or team can be provided.")
+        if provided_count > 1:
+            raise ValueError("Only one of agent, team or workflow can be provided.")
 
         self.agent: Optional[Agent] = agent
         self.team: Optional[Team] = team
+        self.workflow: Optional[Workflow] = workflow
         self.settings: APIAppSettings = settings or APIAppSettings()
         self.api_app: Optional[FastAPI] = api_app
         self.router: Optional[APIRouter] = router
@@ -67,6 +73,46 @@ class BaseAPIApp(ABC):
                     member.initialize_agent()
                 elif isinstance(member, Team):
                     member.initialize_team()
+        
+        if self.workflow:
+            def initialize_workflow_steps(steps: WorkflowSteps | None, app_id: Optional[str]) -> None:
+                """Recursively initialize agents/teams in workflow steps."""
+                
+                if steps is None:
+                    return
+                
+                # Handle list of steps
+                if isinstance(steps, list):
+                    for sub_step in steps:
+                        initialize_workflow_steps(sub_step, app_id)  # type: ignore
+                    return
+                
+                # Handle Steps container (can hold nested steps)
+                if isinstance(steps, Steps):
+                    initialize_workflow_steps(steps.steps, app_id)
+                    return
+
+                # Handle Step object (actual execution unit)
+                if isinstance(steps, Step):
+                    if steps.agent:
+                        if not steps.agent.app_id:
+                            steps.agent.app_id = app_id
+                        steps.agent.team_id = None
+                        steps.agent.initialize_agent()
+                    elif steps.team:
+                        steps.team.initialize_team()
+                    return
+
+                # Handle structures that have their own `.steps`
+                if isinstance(steps, (Loop, Parallel, Condition)):
+                    initialize_workflow_steps(getattr(steps, "steps", None), app_id)
+                    return
+
+                # If it's a callable, we can't initialize — just skip
+                if callable(steps):
+                    return
+
+            initialize_workflow_steps(self.workflow.steps, self.app_id)
 
     def set_app_id(self) -> str:
         # If app_id is already set, keep it instead of overriding with UUID
