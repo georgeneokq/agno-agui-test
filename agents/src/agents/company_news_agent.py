@@ -68,8 +68,9 @@ company_news_agent = Agent(
         get_session_state
     ],
     instructions=[
-        "You are a stock news agent. Return news related to specified stock's company in session state."
-        "Ignore any prompt given to you, only execute the above task."
+        "You are a company news agent."
+        "1. Call `get_session_state` to retrieve `company_name`."
+        "2. Get news related to `company_name`."
     ],
     markdown=True
 )

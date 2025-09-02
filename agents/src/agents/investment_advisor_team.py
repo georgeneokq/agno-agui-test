@@ -28,7 +28,7 @@ investment_advisor_team = Team(
         # "Respond to user's query, redirect to suitable member of the team."
     ],
     mode="coordinate",
-    stream=True,
+    stream=not os.getenv("AGNO_DEBUG"),
     stream_intermediate_steps=True,
     add_datetime_to_instructions=True,
     enable_agentic_context=True,

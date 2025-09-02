@@ -36,21 +36,25 @@ planner_agent = Agent(
     instructions=[
         "Given a company name, retrieve its matching stock symbol or vice-versa, and set both into workflow session state."
         "Example: Tesla <-> TSLA"
-        "Do not output anything, just set state."
+        "Always output ONLY the following text: \"The workflow session state has been updated.\""
     ],
     tools=[set_state],
-    add_name_to_instructions=True,
-    add_state_in_messages=True
+    add_name_to_instructions=True
 )
 
 team = Team(
+    name="Company Analyzer Team",
     model=Gemini(
         id="gemini-2.5-flash",
         api_key=os.getenv("GEMINI_API_KEY")
     ),
     mode="collaborate",
     members=[stock_price_agent, company_news_agent],
-    stream=True,
+    stream=not os.getenv("AGNO_DEBUG"),
+    instructions=[
+        "You are a team of investment analysts."
+        "Always call run_member_agents with ONLY the following message: \"Get data on the specified company.\""
+    ],
     add_state_in_messages=True
 )
 
@@ -80,10 +84,11 @@ stock_research_workflow = Workflow(
     name="Stock research workflow",
     steps=[
         planner_agent_step,
-        debug_session_state,
+        # debug_session_state,
         collaboration_step,
     ],
-    stream=True,
-    stream_intermediate_steps=True,
+    stream=not os.getenv("AGNO_DEBUG"),
+    stream_intermediate_steps=not os.getenv("AGNO_DEBUG"),
     workflow_session_state={"stock_symbol": "", "company_name": ""},
+    debug_mode=True if os.getenv("AGNO_DEBUG", "").lower() == "true" else False,
 )

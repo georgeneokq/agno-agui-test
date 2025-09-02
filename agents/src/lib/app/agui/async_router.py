@@ -43,6 +43,7 @@ async def run_agent(agent: Agent, run_input: RunAgentInput) -> AsyncIterator[Bas
 
         # Stream the response content in AG-UI format
         async for event in async_stream_agno_response_as_agui_events(
+            state_holder=agent,
             response_stream=response_stream
         ):
             yield event
@@ -75,6 +76,7 @@ async def run_team(team: Team, input: RunAgentInput) -> AsyncIterator[BaseEvent]
 
         # Stream the response content in AG-UI format
         async for event in async_stream_agno_response_as_agui_events(
+            state_holder=team,
             response_stream=response_stream
         ):
             yield event
@@ -106,6 +108,7 @@ async def run_workflow(workflow: Workflow, input: RunAgentInput) -> AsyncIterato
 
         # Stream the response content in AG-UI format
         async for event in async_stream_agno_response_as_agui_events(
+            state_holder=workflow,
             response_stream=response_stream
         ):
             yield event

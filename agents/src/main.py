@@ -17,6 +17,9 @@ async def lifespan(app: FastAPI):
 async def main():
     start_telemetry()
 
+    # await stock_research_workflow.aprint_response("Tesla")
+    # return
+
     agui_app = AGUIApp(
         workflow=stock_research_workflow,
         # agent=stock_price_agent,
