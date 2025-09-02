@@ -357,7 +357,6 @@ from agno.team import Team
 from agno.workflow.v2 import Workflow
 from ag_ui.core import StateDeltaEvent
 from jsonpatch import make_patch
-import copy
 
 def _retrieve_state(state_holder: Agent | Team | Workflow):
     if isinstance(state_holder, Agent):
@@ -370,7 +369,6 @@ def _retrieve_state(state_holder: Agent | Team | Workflow):
 def _compare_states(old_state: dict, new_state: dict):
     # Generate JSON patch operations to transform old_state to new_state
     patch = make_patch(old_state, new_state)
-    print(list(patch))
     return StateDeltaEvent(delta=list(patch))
 
 # Async version - thin wrapper
@@ -387,7 +385,7 @@ async def async_stream_agno_response_as_agui_events(
     event_buffer = EventBuffer()
 
     # Emit initial state snapshot
-    last_state = _retrieve_state(state_holder)
+    last_state = _retrieve_state(state_holder).copy()
     yield StateSnapshotEvent(snapshot=last_state)
 
     async for chunk in response_stream:
@@ -410,20 +408,12 @@ async def async_stream_agno_response_as_agui_events(
                 for emit_event in events_to_emit:
                     yield emit_event
 
+            # Incremental state changes
+            current_state = _retrieve_state(state_holder).copy()
+            yield _compare_states(last_state, current_state)
+            last_state = current_state.copy()
         else:
             # Process regular chunk
-
-            # Incremental state changes
-            current_state = _retrieve_state(state_holder)
-            # yield _compare_states(last_state, current_state)
-            _patch = make_patch(last_state, current_state)
-            patch = list(_patch)
-            if patch:
-                print(patch)
-            # yield StateDeltaEvent(delta=patch)
-            yield StateSnapshotEvent(snapshot=current_state)
-            last_state = copy.deepcopy(current_state)
-
             events_from_chunk, message_started = _create_events_from_chunk(
                 chunk, message_id, message_started, event_buffer
             )
