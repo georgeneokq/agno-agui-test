@@ -49,7 +49,7 @@ async def run_agent(agent: Agent, run_input: RunAgentInput) -> AsyncIterator[Bas
         ):
             yield event
 
-        yield StateSnapshotEvent(snapshot=agent.workflow_session_state)
+        yield StateSnapshotEvent(snapshot=agent.session_state)
         yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=run_input.thread_id, run_id=run_id)
 
     # Emit a RunErrorEvent if any error occurs
@@ -83,7 +83,7 @@ async def run_team(team: Team, input: RunAgentInput) -> AsyncIterator[BaseEvent]
         ):
             yield event
 
-        yield StateSnapshotEvent(snapshot=team.workflow_session_state)
+        yield StateSnapshotEvent(snapshot=team.team_session_state)
         yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=input.thread_id, run_id=run_id)
 
     except Exception as e:

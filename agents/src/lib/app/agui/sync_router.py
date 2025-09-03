@@ -10,7 +10,8 @@ from ag_ui.core import (
     RunAgentInput,
     RunErrorEvent,
     RunStartedEvent,
-    RunFinishedEvent
+    RunFinishedEvent,
+    StateSnapshotEvent
 )
 from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter
@@ -43,10 +44,12 @@ def run_agent(agent: Agent, run_input: RunAgentInput) -> Iterator[BaseEvent]:
 
         # Stream the response content in AG-UI format
         for event in stream_agno_response_as_agui_events(
+            state_holder=agent,
             response_stream=response_stream
         ):
             yield event
 
+        yield StateSnapshotEvent(snapshot=agent.session_state)
         yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=run_input.thread_id, run_id=run_id)
 
     # Emit a RunErrorEvent if any error occurs
@@ -75,10 +78,12 @@ def run_team(team: Team, input: RunAgentInput) -> Iterator[BaseEvent]:
 
         # Stream the response content in AG-UI format
         for event in stream_agno_response_as_agui_events(
+            state_holder=team,
             response_stream=response_stream
         ):
             yield event
 
+        yield StateSnapshotEvent(snapshot=team.team_session_state)
         yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=input.thread_id, run_id=run_id)
 
     except Exception as e:
@@ -105,10 +110,12 @@ def run_workflow(workflow: Workflow, input: RunAgentInput) -> Iterator[BaseEvent
 
         # Stream the response content in AG-UI format
         for event in stream_agno_response_as_agui_events(
+            state_holder=workflow,
             response_stream=response_stream
         ):
             yield event
 
+        yield StateSnapshotEvent(snapshot=workflow.workflow_session_state)
         yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id=input.thread_id, run_id=run_id)
 
     except Exception as e:

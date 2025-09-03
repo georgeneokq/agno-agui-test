@@ -8,7 +8,7 @@ from fastapi import FastAPI
 
 from telemetry import start_telemetry
 from agents.investment_advisor_team import investment_advisor_team
-from agents.investment_advisor_workflow import stock_research_workflow
+# from agents.investment_advisor_workflow import stock_research_workflow
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,7 +21,8 @@ async def main():
     # return
 
     agui_app = AGUIApp(
-        workflow=stock_research_workflow,
+        # workflow=stock_research_workflow,
+        team=investment_advisor_team,
         # agent=stock_price_agent,
         name="multiagent_agui",
         app_id="multiagent_agui",
