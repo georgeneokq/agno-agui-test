@@ -22,7 +22,7 @@ async def main():
         description="Multiagent AGUI",
     )
 
-    app = agui_app.get_app()
+    app = agui_app.get_app(use_async=False)
     app.router.lifespan_context = lifespan
 
     config = uvicorn.Config(app=app, host="0.0.0.0", port=8000)

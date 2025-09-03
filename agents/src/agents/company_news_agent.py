@@ -1,6 +1,7 @@
 import os
 from agno.agent import Agent
 from agno.models.google import Gemini
+from agents.util import get_session_state
 
 def get_company_news(company_name: str):
     """
@@ -61,7 +62,10 @@ company_news_agent = Agent(
         id="gemini-2.5-flash",
         api_key=os.getenv("GEMINI_API_KEY")
     ),
-    tools=[get_company_news],
-    instructions="You are a stock news agent. Return news related to specified stock's company.",
+    tools=[
+        get_company_news,
+        get_session_state
+    ],
+    instructions="You are a stock news agent. Return news related to specified stock's company in session state `company_name`.",
     markdown=True
 )

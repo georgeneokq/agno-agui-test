@@ -5,6 +5,7 @@ from agno.storage.sqlite import SqliteStorage
 from agents.stock_price_agent import stock_price_agent
 from agents.company_news_agent import company_news_agent
 from agents.stock_summary_agent import stock_summary_agent
+from agents.util import set_session_state
 
 # For testing collaborate mode, remove the stock summary agent and the instruction referencing it.
 # For testing coordinate mode, include the stock summary agent and the instruction referencing it.
@@ -22,13 +23,18 @@ investment_advisor_team = Team(
     ],
     instructions=[
         "You should expect a company or a stock symbol as an input."
-        "First get the stock price from Stock Price Agent and news from Company News Agent."
-        "Finally, ask the Stock Summary Agent to summarize the price and news."
-        # "Finally, summarize the price and news."
+        "Set the information into team session state."
+        "Next, get the stock price from Stock Price Agent and news from Company News Agent."
+        "Finally, summarize the price and news and set the summary into team session state."
+        # "Finally, ask the Stock Summary Agent to summarize the price and news."
         # "Respond to user's query, redirect to suitable member of the team."
+    ],
+    tools=[
+        set_session_state
     ],
     mode="coordinate",
     stream=True,
+    debug_mode=True,
     stream_intermediate_steps=True,
     add_datetime_to_instructions=True,
     enable_agentic_context=True,
