@@ -66,10 +66,8 @@ def run_team(team: Team, input: RunAgentInput) -> Iterator[BaseEvent]:
         yield RunStartedEvent(type=EventType.RUN_STARTED, thread_id=input.thread_id, run_id=run_id)
 
         # Request streaming response from team
-        # Team.arun() does not handle list[Message] type, join the messages
-        str_messages = list(map(lambda msg: cast(str, msg.content), messages))
         response_stream = team.run(
-            message=str_messages,
+            message=messages,
             session_id=input.thread_id,
             stream=True,
             stream_intermediate_steps=True,
