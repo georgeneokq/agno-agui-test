@@ -14,4 +14,4 @@ class AGUIApp(BaseAPIApp):
         return get_sync_agui_router(agent=self.agent, team=self.team)
 
     def get_async_router(self) -> APIRouter:
-        return get_async_agui_router(agent=self.agent, team=self.team)
+        return get_async_agui_router(agent=self.agent, team=self.team, workflow=self.workflow)

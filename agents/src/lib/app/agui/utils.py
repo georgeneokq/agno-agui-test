@@ -19,14 +19,17 @@ from ag_ui.core import (
     ToolCallEndEvent,
     ToolCallResultEvent,
     ToolCallStartEvent,
+    StateSnapshotEvent,
+    StateDeltaEvent
 )
 from ag_ui.core.types import Message as AGUIMessage
 
 from agno.models.message import Message
 from agno.run.response import RunEvent, RunResponseContentEvent, RunResponseEvent, RunResponsePausedEvent
-from agno.run.team import RunResponseContentEvent as TeamRunResponseContentEvent
-from agno.run.team import TeamRunEvent, TeamRunResponseEvent
-
+from agno.run.team import RunResponseContentEvent as TeamRunResponseContentEvent, TeamRunEvent, TeamRunResponseEvent
+from agno.agent import Agent
+from agno.team import Team
+from jsonpatch import make_patch
 
 @dataclass
 class EventBuffer:
@@ -313,13 +316,32 @@ def _emit_event_logic(event: BaseEvent, event_buffer: EventBuffer) -> List[BaseE
     return events_to_emit
 
 
+def _retrieve_state(state_holder: Agent | Team):
+    """Retrieve the state of an Agent or Team"""
+    if isinstance(state_holder, Agent):
+        return state_holder.session_state or {}
+    else:
+        return state_holder.team_session_state or {}
+
+
+def _generate_state_patch(old_state: dict, new_state: dict):
+    """Generate JSON Patch for updating state"""
+    patch = make_patch(old_state, new_state)
+    return list(patch)
+
+
 def stream_agno_response_as_agui_events(
+    state_holder: Agent | Team,
     response_stream: Iterator[Union[RunResponseEvent, TeamRunResponseEvent]]
 ) -> Iterator[BaseEvent]:
     """Map the Agno response stream to AG-UI format, handling event ordering constraints."""
     message_id = str(uuid.uuid4())
     message_started = False
     event_buffer = EventBuffer()
+
+    # Emit initial state snapshot
+    last_state = _retrieve_state(state_holder).copy()
+    yield StateSnapshotEvent(snapshot=last_state)
 
     for chunk in response_stream:
         # Handle the lifecycle end event
@@ -339,6 +361,13 @@ def stream_agno_response_as_agui_events(
                 events_to_emit = _emit_event_logic(event_buffer=event_buffer, event=event)
                 for emit_event in events_to_emit:
                     yield emit_event
+
+            # Incremental state changes
+            current_state = _retrieve_state(state_holder).copy()
+            patch = _generate_state_patch(last_state, current_state)
+            if patch:
+                yield StateDeltaEvent(delta=patch)
+            last_state = current_state.copy()
         else:
             # Process regular chunk
             events_from_chunk, message_started = _create_events_from_chunk(
@@ -350,15 +379,22 @@ def stream_agno_response_as_agui_events(
                 for emit_event in events_to_emit:
                     yield emit_event
 
-
 # Async version - thin wrapper
 async def async_stream_agno_response_as_agui_events(
+    state_holder: Agent | Team,
     response_stream: AsyncIterator[Union[RunResponseEvent, TeamRunResponseEvent]],
 ) -> AsyncIterator[BaseEvent]:
-    """Map the Agno response stream to AG-UI format, handling event ordering constraints."""
+    """
+    Map the Agno response stream to AG-UI format, handling event ordering constraints.
+    Also handles propagation of state changes.
+    """
     message_id = str(uuid.uuid4())
     message_started = False
     event_buffer = EventBuffer()
+
+    # Emit initial state snapshot
+    last_state = _retrieve_state(state_holder).copy()
+    yield StateSnapshotEvent(snapshot=last_state)
 
     async for chunk in response_stream:
         # Handle the lifecycle end event
@@ -378,6 +414,13 @@ async def async_stream_agno_response_as_agui_events(
                 events_to_emit = _emit_event_logic(event_buffer=event_buffer, event=event)
                 for emit_event in events_to_emit:
                     yield emit_event
+
+            # Incremental state changes
+            current_state = _retrieve_state(state_holder).copy()
+            patch = _generate_state_patch(last_state, current_state)
+            if patch:
+                yield StateDeltaEvent(delta=patch)
+            last_state = current_state.copy()
         else:
             # Process regular chunk
             events_from_chunk, message_started = _create_events_from_chunk(
