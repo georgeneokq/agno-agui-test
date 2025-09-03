@@ -65,9 +65,7 @@ async def run_team(team: Team, input: RunAgentInput) -> AsyncIterator[BaseEvent]
         messages = convert_agui_messages_to_agno_messages(input.messages or [])
         yield RunStartedEvent(type=EventType.RUN_STARTED, thread_id=input.thread_id, run_id=run_id)
 
-        # Request streaming response from team.
-        # Team.arun() does not handle list[Message] type, join the messages
-        # str_messages = list(map(lambda msg: cast(str, msg.content), messages))
+        # Request streaming response from team
         response_stream = await team.arun(
             message=messages,
             session_id=input.thread_id,
